@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BauAssist – KI-Assistent für Bauleiter</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--ink:#1c2430;--muted:#6b7480;--line:#e2e5ea;--acc:#f28c28;--acc-d:#d9741a;--dark:#1f2a37;--red:#c62828;--red-bg:#fdecea;--yel:#9a5b00;--yel-bg:#fff4e0;--grn:#2e7d32;--grn-bg:#e8f5e9;--blue:#1565c0;--blue-bg:#e3f0fc;--r:10px}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--dark);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{font-weight:800;font-size:19px;letter-spacing:.3px}.logo span{color:var(--acc)}
+.proj{color:#c9d1db;font-size:13px}
+.mode{margin-left:auto;font-size:12px;padding:4px 10px;border-radius:999px;background:#33404f;cursor:pointer}.mode.ai{background:var(--grn)}
+nav{background:#fff;border-bottom:1px solid var(--line);display:flex;gap:2px;padding:0 12px;overflow-x:auto;position:sticky;top:0;z-index:5}
+nav button{border:0;background:none;padding:13px 14px;font:inherit;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+nav button.active{color:var(--ink);border-bottom-color:var(--acc)}
+.pill{display:inline-block;min-width:18px;padding:0 6px;border-radius:9px;background:var(--red);color:#fff;font-size:11px;line-height:18px;text-align:center;margin-left:4px}
+main{max-width:1240px;margin:0 auto;padding:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:16px}
+h2{margin:0 0 10px;font-size:18px}h3{margin:18px 0 8px;font-size:15px}
+.muted{color:var(--muted);font-size:13px}
+.grid{display:grid;gap:16px}.g4{grid-template-columns:repeat(4,1fr)}.g2{grid-template-columns:1fr 1fr}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px}.kpi b{display:block;font-size:28px;line-height:1.1}.kpi span{color:var(--muted);font-size:13px}.kpi.bad b{color:var(--red)}
+.btn{border:1px solid var(--line);background:#fff;padding:8px 14px;border-radius:8px;font:inherit;font-weight:600;cursor:pointer;color:var(--ink);white-space:nowrap}.btn:hover{background:#f0f2f5}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}.btn.pri:hover{background:var(--acc-d)}
+.btn.ok{background:var(--grn);border-color:var(--grn);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}.btn.sm{padding:5px 10px;font-size:13px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+input,select,textarea{font:inherit;border:1px solid #cfd4db;border-radius:8px;padding:8px 10px;width:100%;background:#fff;color:var(--ink)}
+textarea{resize:vertical}label{font-size:13px;font-weight:600;display:block;margin:10px 0 4px}
+.alert{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:8px;margin-bottom:8px;border-left:4px solid}
+.alert.hoch{background:var(--red-bg);border-color:var(--red)}.alert.mittel{background:var(--yel-bg);border-color:var(--yel)}.alert.niedrig{background:var(--blue-bg);border-color:var(--blue)}
+.alert .t{font-weight:700}.alert .x{flex:1}.alert .d{font-size:13px;color:#444;margin-top:2px}
+table.t{width:100%;border-collapse:collapse;font-size:14px}table.t th,table.t td{padding:8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}table.t th{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.bar{height:8px;background:#e8ebef;border-radius:4px;position:relative;min-width:110px;margin:6px 0 3px}.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--grn)}.bar.late i{background:var(--red)}.bar u{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
+.st{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap;display:inline-block}
+.st.verzug{background:var(--red-bg);color:var(--red)}.st.beobachten{background:var(--yel-bg);color:var(--yel)}.st.implan,.st.fertig{background:var(--grn-bg);color:var(--grn)}.st.geplant{background:#eef0f3;color:var(--muted)}
+.st.entwurf{background:var(--yel-bg);color:var(--yel)}.st.freigegeben{background:var(--grn-bg);color:var(--grn)}.st.versendet{background:var(--blue-bg);color:var(--blue)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.chip{border:1px dashed #b8bfc8;background:#fafbfc;border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer}.chip:hover{border-color:var(--acc);background:#fff}
+.mic.on{background:var(--red);border-color:var(--red);color:#fff;animation:pulse 1.2s infinite}@keyframes pulse{50%{opacity:.7}}
+.layout{display:grid;grid-template-columns:250px 1fr;gap:16px}
+.ed{display:grid;grid-template-columns:minmax(320px,1fr) minmax(360px,1.1fr);gap:16px;align-items:start}
+.nlist .it{padding:10px;border:1px solid var(--line);border-radius:8px;margin-bottom:8px;cursor:pointer;background:#fff;font-size:14px}.nlist .it.sel{border-color:var(--acc);box-shadow:0 0 0 2px #f28c2833}.nlist .it small{color:var(--muted);display:block}
+.src{font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px;margin-left:6px;vertical-align:middle;text-transform:uppercase;letter-spacing:.3px}
+.src.diktat{background:var(--blue-bg);color:var(--blue)}.src.projekt{background:#ede7f6;color:#5e35b1}.src.ki{background:var(--yel-bg);color:var(--yel)}.src.manuell{background:var(--grn-bg);color:var(--grn)}.src.leer{background:var(--red-bg);color:var(--red)}
+.fld.miss textarea{border-color:var(--red);background:#fffafa}.q{font-size:12.5px;color:var(--red);margin-top:3px}
+.paper{background:#fff;border:1px solid var(--line);box-shadow:0 2px 10px rgba(0,0,0,.06);padding:28px 34px;font-family:Arial,Helvetica,sans-serif;font-size:13.5px;line-height:1.5;position:sticky;top:60px;max-height:calc(100vh - 80px);overflow:auto}
+.banner{background:var(--blue-bg);border:1px solid #b9d6f5;padding:10px 12px;border-radius:8px;font-size:13.5px;margin-bottom:12px}
+.disc{font-size:12px;color:var(--muted);margin-top:10px}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--dark);color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;z-index:50}#toast.show{opacity:1}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}@keyframes sp{to{transform:rotate(360deg)}}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}.thumbs div{position:relative}.thumbs img{width:90px;height:70px;object-fit:cover;border-radius:6px;border:1px solid var(--line)}.thumbs button{position:absolute;top:2px;right:2px;border:0;background:#000a;color:#fff;border-radius:4px;cursor:pointer;font-size:11px}
+.ev{font-size:13px;display:flex;gap:6px;align-items:flex-start;margin:4px 0;font-weight:400}.ev input{width:auto;margin-top:3px}
+.tag{font-size:11px;font-weight:700;padding:1px 6px;border-radius:4px;background:#eef0f3;color:#444}.tag.behinderung,.tag.risiko{background:var(--red-bg);color:var(--red)}.tag.anordnung{background:#ede7f6;color:#5e35b1}.tag.bedenken,.tag.mangel{background:var(--yel-bg);color:var(--yel)}.tag.wetter{background:var(--blue-bg);color:var(--blue)}
+details summary{cursor:pointer}details ol{margin:10px 0 0 0;padding-left:20px}details li{margin:5px 0}
+/* Brief / Bericht */
+.letter{color:#111}.l-sender{font-size:9px;color:#555;border-bottom:1px solid #999;display:inline-block;margin-bottom:6px}.l-recip{margin:4px 0 26px;min-height:70px}.l-date{text-align:right;margin-bottom:16px}.l-bv{margin-bottom:12px}.l-subj{font-weight:bold;margin:12px 0 14px}.l-sign{margin-top:30px}.l-anl{margin-top:22px;font-size:12px}.l-anl ol{margin:4px 0 0 18px;padding:0}.l-photos img{max-width:48%;margin:6px 1% 0 0}
+.letter h1{font-size:19px;margin:0 0 10px}.letter h3{font-size:12.5px;margin:16px 0 6px;text-transform:uppercase;letter-spacing:.4px}.letter table{border-collapse:collapse;width:100%;font-size:12px;margin-bottom:6px}.letter th,.letter td{border:1px solid #bbb;padding:4px 6px;text-align:left}.letter th{background:#f0f0f0}.letter .neg{color:#b00020;font-weight:bold}
+mark.miss{background:#ffe08a;padding:0 2px}.wm{border:2px dashed #c62828;color:#c62828;font-weight:bold;text-align:center;padding:4px;margin-bottom:14px;font-size:12px}
+@media(max-width:900px){.g4{grid-template-columns:1fr 1fr}.g2,.layout,.ed{grid-template-columns:1fr}.paper{position:static;max-height:none;padding:18px}main{padding:12px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Bau<span>Assist</span></div>
+  <div class="proj" id="hdr-proj"></div>
+  <div class="mode" id="mode" onclick="go('settings')"></div>
+</header>
+<nav id="nav">
+  <button data-tab="overview" onclick="go('overview')">Übersicht <span id="alert-pill"></span></button>
+  <button data-tab="capture" onclick="go('capture')">🎤 Erfassen</button>
+  <button data-tab="notices" onclick="go('notices')">Schreiben</button>
+  <button data-tab="report" onclick="go('report')">Bautagesbericht</button>
+  <button data-tab="summary" onclick="go('summary')">Protokolle & Mails</button>
+  <button data-tab="settings" onclick="go('settings')">Einstellungen</button>
+</nav>
+<main id="main"></main>
+<div id="toast"></div>
+
+<script>
+/* =========================================================
+   BauAssist – Prototyp "AI Site Manager Assistant"
+   Ein-Datei-App: läuft ohne Server. KI optional (API-Key).
+   ========================================================= */
+
+/* ---------- Helfer ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nl2br = s => esc(s).replace(/\n/g, '<br>');
+const uid = (p = 'id') => p + Math.random().toString(36).slice(2, 9);
+const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+const trunc = (s, n) => (s = String(s || '')).length > n ? s.slice(0, n - 1) + '…' : s;
+function today() { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }
+function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+function iso(d) { const x = new Date(d); return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); }
+function parseIso(s) { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
+function fmt(s) { return parseIso(s).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }); }
+function fmtDT(s) { const d = new Date(s); return d.toLocaleDateString('de-DE') + ', ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); }
+function weekday(s) { return parseIso(s).toLocaleDateString('de-DE', { weekday: 'long' }); }
+function daysBetween(a, b) { return Math.round((parseIso(b) - parseIso(a)) / 86400000); }
+function nowTime() { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+function parseDE(s) { const m = String(s || '').match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/); return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null; }
+const num = (n, d = 0) => Number(n || 0).toLocaleString('de-DE', { maximumFractionDigits: d, minimumFractionDigits: d });
+function toast(msg, ms = 3200) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), ms); }
+function setBusy(sel, on, label) { const b = $(sel); if (!b) return; if (on) { b.dataset.l = b.innerHTML; b.disabled = true; b.innerHTML = '<span class="spin"></span>' + (label || 'Arbeite…'); } else { b.disabled = false; if (b.dataset.l) b.innerHTML = b.dataset.l; } }
+
+/* ---------- Stammdaten & Konstanten ---------- */
+const EVT = { info: 'Info', behinderung: 'Behinderung', risiko: 'Risiko', anordnung: 'Anordnung', bedenken: 'Bedenken', mangel: 'Mangel', wetter: 'Wetter' };
+const STATUS = { entwurf: 'Entwurf', freigegeben: 'Freigegeben', versendet: 'Versendet' };
+const STL = { 'geplant': 'geplant', 'im plan': 'im Plan', 'beobachten': 'beobachten', 'verzug': 'Verzug', 'fertig': 'fertig' };
+const SRC = { diktat: 'Diktat', projekt: 'Projektdaten', ki: 'KI-Vorschlag', manuell: 'manuell', leer: 'fehlt' };
+const LANGS = [['de-DE', 'Deutsch'], ['pl-PL', 'Polski'], ['ro-RO', 'Română'], ['tr-TR', 'Türkçe'], ['en-US', 'English']].map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
+
+/* Schreibentypen: Pflichtfelder + deterministische Textbausteine.
+   Die KI füllt nur Felder – der Brieftext kommt aus geprüften Vorlagen. */
+const TYPES = {
+  behinderung: {
+    title: 'Behinderungsanzeige', ref: '§ 6 Abs. 1 VOB/B', to: 'client',
+    fields: [
+      { k: 'betroffen', l: 'Betroffene Leistung / Bereich', req: true, q: 'Welche Leistung bzw. welcher Bereich ist betroffen?' },
+      { k: 'beginn', l: 'Beginn der Behinderung (Datum, Uhrzeit)', req: true, q: 'Seit wann genau besteht die Behinderung?' },
+      { k: 'ursache', l: 'Hindernde Umstände / Ursache', req: true, q: 'Was genau verhindert die Ausführung?' },
+      { k: 'auswirkung', l: 'Auswirkungen (Personal, Geräte, Ablauf)', req: true, q: 'Welche Arbeitskräfte und Geräte sind betroffen?' },
+      { k: 'bauzeit', l: 'Auswirkung auf die Bauzeit (Soll-Ist)', req: false },
+      { k: 'massnahmen', l: 'Bereits ergriffene Maßnahmen', req: false },
+      { k: 'mitwirkung', l: 'Erforderliche Mitwirkung des AG', req: false }
+    ],
+    subject: F => `Behinderungsanzeige gemäß § 6 Abs. 1 VOB/B – ${F('betroffen')}`,
+    body: (F, v) => [
+      'hiermit zeigen wir Ihnen gemäß § 6 Abs. 1 VOB/B an, dass wir in der ordnungsgemäßen Ausführung der uns übertragenen Leistungen behindert sind.',
+      `<b>Betroffene Leistung / Bereich:</b> ${F('betroffen')}<br><b>Beginn der Behinderung:</b> ${F('beginn')}<br><b>Hindernde Umstände:</b> ${F('ursache')}<br><b>Auswirkungen:</b> ${F('auswirkung')}` +
+        (v.bauzeit ? `<br><b>Auswirkung auf den Bauablauf:</b> ${F('bauzeit')}` : '') +
+        (v.massnahmen ? `<br><b>Ergriffene Maßnahmen:</b> ${F('massnahmen')}` : ''),
+      'Nach unserer Einschätzung liegen die hindernden Umstände nicht in unserem Verantwortungsbereich.' + (v.mitwirkung ? ` Zur Beseitigung der Behinderung ist folgende Mitwirkung Ihrerseits erforderlich: ${F('mitwirkung')}.` : ''),
+      'Die Auswirkungen auf die Ausführungsfristen und die Kosten können derzeit noch nicht abschließend beurteilt werden. Wir behalten uns die Geltendmachung einer Verlängerung der Ausführungsfristen (§ 6 Abs. 2 VOB/B) sowie weitergehender Ansprüche ausdrücklich vor.',
+      'Sobald die Behinderung entfällt, nehmen wir die Arbeiten unverzüglich wieder auf und zeigen Ihnen dies an.'
+    ]
+  },
+  mehrkosten: {
+    title: 'Mehrkostenanzeige', ref: '§ 2 Abs. 6 Nr. 1 VOB/B', to: 'client',
+    fields: [
+      { k: 'leistung', l: 'Zusätzliche / geänderte Leistung', req: true, q: 'Welche zusätzliche oder geänderte Leistung soll ausgeführt werden?' },
+      { k: 'anordnung', l: 'Anordnung (wann, durch wen, wie)', req: true, q: 'Wer hat die Leistung wann und in welcher Form angeordnet?' },
+      { k: 'grund', l: 'Warum nicht im Vertrag enthalten', req: false },
+      { k: 'umfang', l: 'Geschätzter Umfang', req: false },
+      { k: 'ausfuehrung', l: 'Geplanter Ausführungsbeginn', req: false }
+    ],
+    subject: F => `Ankündigung von Mehrkosten gemäß § 2 Abs. 6 Nr. 1 VOB/B – ${F('leistung')}`,
+    body: (F, v) => [
+      `mit Anordnung vom ${F('anordnung')} haben Sie die Ausführung folgender Leistung verlangt:`,
+      `<b>${F('leistung')}</b>` + (v.umfang ? `<br>Umfang (geschätzt): ${F('umfang')}` : ''),
+      v.grund ? F('grund') : 'Diese Leistung ist im bestehenden Vertrag bzw. Leistungsverzeichnis nicht vorgesehen.',
+      'Hiermit kündigen wir Ihnen gemäß § 2 Abs. 6 Nr. 1 VOB/B vor Beginn der Ausführung unseren Anspruch auf eine besondere Vergütung an. Soweit es sich um die Änderung einer vertraglich vorgesehenen Leistung handelt, gilt § 2 Abs. 5 VOB/B.',
+      'Ein Nachtragsangebot reichen wir Ihnen kurzfristig nach.' + (v.ausfuehrung ? ` Die Ausführung ist ab ${F('ausfuehrung')} vorgesehen.` : ''),
+      'Wir bitten um schriftliche Bestätigung der Anordnung.'
+    ]
+  },
+  bedenken: {
+    title: 'Bedenkenanzeige', ref: '§ 4 Abs. 3 VOB/B', to: 'client',
+    fields: [
+      { k: 'gegenstand', l: 'Betroffene Vorgabe (Plan, LV, Material, Vorleistung)', req: true, q: 'Gegen welche Vorgabe bestehen Bedenken?' },
+      { k: 'bedenken', l: 'Begründung der Bedenken', req: true, q: 'Warum ist die Vorgabe aus Ihrer Sicht problematisch?' },
+      { k: 'folgen', l: 'Mögliche Folgen bei Ausführung wie geplant', req: true, q: 'Welche Folgen drohen, wenn wie geplant ausgeführt wird (z. B. Schäden, Dauerhaftigkeit)?' },
+      { k: 'vorschlag', l: 'Vorschlag / Alternative', req: false },
+      { k: 'frist', l: 'Entscheidung erbeten bis', req: true, q: 'Bis wann brauchen Sie eine Entscheidung des Auftraggebers?' }
+    ],
+    subject: F => `Bedenkenanzeige gemäß § 4 Abs. 3 VOB/B – ${F('gegenstand')}`,
+    body: (F, v) => [
+      'gegen die vorgesehene Art der Ausführung melden wir hiermit gemäß § 4 Abs. 3 VOB/B Bedenken an.',
+      `<b>Betroffene Vorgabe:</b> ${F('gegenstand')}<br><b>Begründung:</b> ${F('bedenken')}<br><b>Mögliche Folgen:</b> ${F('folgen')}` + (v.vorschlag ? `<br><b>Unser Vorschlag:</b> ${F('vorschlag')}` : ''),
+      `Wir bitten Sie, den Sachverhalt zu prüfen und uns Ihre Entscheidung bis spätestens ${F('frist')} schriftlich mitzuteilen. Sollten Sie an der vorgesehenen Ausführung festhalten, bitten wir um eine entsprechende schriftliche Anordnung.`,
+      'Wir weisen darauf hin, dass wir für Folgen, die sich aus der Ausführung entsprechend der derzeitigen Vorgaben ergeben, keine Gewähr übernehmen können.'
+    ]
+  },
+  maengel: {
+    title: 'Mängelrüge', ref: '§ 4 Abs. 7 VOB/B', to: 'field',
+    fields: [
+      { k: 'empfaenger', l: 'Empfänger (Nachunternehmer)', req: true, q: 'An welchen Nachunternehmer richtet sich die Mängelrüge?' },
+      { k: 'mangel', l: 'Beschreibung des Mangels', req: true, q: 'Was genau ist mangelhaft?' },
+      { k: 'ort', l: 'Ort / Bauteil', req: true, q: 'Wo genau befindet sich der Mangel?' },
+      { k: 'festgestellt', l: 'Festgestellt am', req: true, q: 'Wann wurde der Mangel festgestellt?' },
+      { k: 'frist', l: 'Frist zur Beseitigung', req: true, q: 'Bis wann soll der Mangel beseitigt werden?' }
+    ],
+    subject: F => `Mängelrüge gemäß § 4 Abs. 7 VOB/B – ${F('ort')}`,
+    body: (F) => [
+      `bei der Kontrolle Ihrer Leistungen am ${F('festgestellt')} haben wir folgenden Mangel festgestellt:`,
+      `<b>Mangel:</b> ${F('mangel')}<br><b>Ort / Bauteil:</b> ${F('ort')}`,
+      `Wir fordern Sie hiermit auf, den Mangel bis spätestens ${F('frist')} fachgerecht zu beseitigen und uns die Beseitigung schriftlich anzuzeigen.`,
+      'Nach fruchtlosem Ablauf der Frist behalten wir uns vor, weitere Schritte gemäß § 4 Abs. 7 in Verbindung mit § 8 Abs. 3 VOB/B einzuleiten.'
+    ]
+  }
+};
+
+/* ---------- Demo-Baustelle (Daten relativ zu heute) ---------- */
+function makeSeed() {
+  const t0 = addDays(today(), -9);            // Tag 0 = vor 9 Tagen, Tag 8 = gestern
+  const d = n => iso(addDays(t0, n));
+  const perf = { 0: { A1: 40 }, 1: { A1: 40 }, 2: { A1: 38, A2: 150 }, 3: { A1: 42, A2: 160 }, 4: { A2: 145 }, 5: { A2: 155 }, 6: { A2: 60 }, 7: { A2: 40 }, 8: { A2: 70 } };
+  const weather = ['sonnig', 'bewölkt', 'bewölkt', 'sonnig', 'bedeckt', 'sonnig', 'bewölkt', 'Regen ab 13 Uhr', 'bedeckt'];
+  const temps = [8, 7, 9, 10, 6, 8, 7, 5, 6], staff = [6, 6, 8, 8, 5, 5, 5, 4, 5];
+  return {
+    version: 1,
+    project: {
+      name: 'Neubau Wohn- und Geschäftshaus Schillerstraße 12', address: 'Schillerstraße 12, 80336 München', contractNo: 'BV-2026-0412',
+      client: { name: 'Wohnbau Isar GmbH', contact: 'z. Hd. Herrn Dipl.-Ing. Schmidt', street: 'Leopoldstraße 88', city: '80802 München' },
+      contractor: { name: 'Huber & Partner Bau GmbH', street: 'Landsberger Straße 300', city: '80687 München' },
+      siteManager: 'Markus Huber'
+    },
+    activities: [
+      { id: 'A1', name: 'Verbau Baugrube (Trägerbohlwand)', trade: 'Spezialtiefbau', start: d(0), end: d(3), qty: 160, unit: 'm²', keywords: ['verbau', 'bohlwand', 'träger'] },
+      { id: 'A2', name: 'Aushub Baugrube', trade: 'Erdbau', start: d(2), end: d(9), qty: 1200, unit: 'm³', keywords: ['aushub', 'bagger', 'baugrube', 'erdarbeit', 'koparka', 'excavator'] },
+      { id: 'A3', name: 'Sauberkeitsschicht', trade: 'Betonbau', start: d(10), end: d(10), qty: 280, unit: 'm²', keywords: ['sauberkeitsschicht', 'magerbeton'] },
+      { id: 'A4', name: 'Bodenplatte bewehren und betonieren', trade: 'Stahlbetonbau', start: d(11), end: d(15), qty: 280, unit: 'm²', keywords: ['bodenplatte', 'bewehrung', 'betonieren'] }
+    ],
+    reports: Array.from({ length: 9 }, (_, i) => ({
+      date: d(i), weather: weather[i], temp: String(temps[i]), staff: String(staff[i]),
+      equipment: i <= 3 ? 'Bohrgerät, Bagger CAT 323' : 'Bagger CAT 323, Radlader, 2 LKW', performance: perf[i] || {}, notes: ''
+    })),
+    events: [
+      { id: 'e1', date: d(5), time: '16:10', type: 'info', source: 'E-Mail', text: 'Bewehrungspläne Bodenplatte (Index B) beim Tragwerksplaner angefordert. Zusage: Lieferung bis ' + fmt(d(8)) + '.', noticeId: null },
+      { id: 'e2', date: d(6), time: '10:30', type: 'behinderung', source: 'Bautagebuch', text: 'Bei Aushub in Achse C–D nicht verzeichnete Telekom-Leitung (Kabelschutzrohr) freigelegt. Arbeiten im Bereich gestoppt, Netzbetreiber informiert, Freigabe ausstehend. Bagger CAT 323 und 2 Arbeiter nur eingeschränkt einsetzbar.', noticeId: null },
+      { id: 'e3', date: d(7), time: '13:00', type: 'wetter', source: 'Bautagebuch', text: 'Starkregen ab 13:00 Uhr, Baugrubensohle teilweise geflutet, Schmutzwasserpumpe eingesetzt.', noticeId: null },
+      { id: 'e4', date: d(8), time: '15:40', type: 'risiko', source: 'Bautagebuch', activityId: 'A4', text: 'Bewehrungspläne Bodenplatte (Index B) trotz Zusage nicht eingegangen. Bewehrungsarbeiten können ohne Pläne nicht vorbereitet werden.', noticeId: null }
+    ],
+    notices: []
+  };
+}
+
+/* ---------- Zustand ---------- */
+const STORE = 'bauassist-v1', CFGSTORE = 'bauassist-cfg';
+let S, CFG;
+function load() {
+  try { const raw = localStorage.getItem(STORE); S = raw ? JSON.parse(raw) : makeSeed(); } catch (e) { S = makeSeed(); }
+  try { CFG = JSON.parse(localStorage.getItem(CFGSTORE)) || {}; } catch (e) { CFG = {}; }
+  CFG = Object.assign({ provider: 'anthropic', apiKey: '', model: 'claude-sonnet-5-5', baseUrl: '' }, CFG);
+}
+function save() { try { localStorage.setItem(STORE, JSON.stringify(S)); } catch (e) { console.warn('Speichern fehlgeschlagen', e); } }
+function saveCfg() { try { localStorage.setItem(CFGSTORE, JSON.stringify(CFG)); } catch (e) { } }
+const hasAI = () => !!(CFG.apiKey && CFG.apiKey.trim());
+const curNotice = () => S.notices.find(n => n.id === curNoticeId);
+const evById = id => S.events.find(e => e.id === id);
+const evSort = (a, b) => (b.date + (b.time || '')).localeCompare(a.date + (a.time || ''));
+const evSortAsc = (a, b) => -evSort(a, b);
+
+/* ---------- Soll-Ist-Analyse (deterministisch, kein KI-Raten) ---------- */
+function lastReportDate() { return S.reports.map(r => r.date).sort().pop() || iso(addDays(today(), -1)); }
+function plannedRate(a) { return a.qty / (daysBetween(a.start, a.end) + 1); }
+function plannedCum(a, date) { if (date < a.start) return 0; if (date >= a.end) return a.qty; return plannedRate(a) * (daysBetween(a.start, date) + 1); }
+function actualCum(a, date) { return S.reports.filter(r => r.date <= date).reduce((s, r) => s + (Number(r.performance?.[a.id]) || 0), 0); }
+function progress(asOf) {
+  return S.activities.map(a => {
+    const p = plannedCum(a, asOf), ac = actualCum(a, asOf), rate = plannedRate(a);
+    const daysBehind = p > ac ? (p - ac) / rate : 0;
+    let status = 'geplant';
+    if (ac >= a.qty) status = 'fertig';
+    else if (asOf >= a.start) status = daysBehind >= 1 ? 'verzug' : daysBehind > 0.3 ? 'beobachten' : 'im plan';
+    return { ...a, p, ac, rate, daysBehind, status, pctPlan: p ? ac / p : null, pctTotal: ac / a.qty };
+  });
+}
+
+/* ---------- Proaktive Warnungen ---------- */
+function computeAlerts() {
+  const out = [], t = iso(today()), asOf = lastReportDate();
+  S.events.filter(e => e.type === 'behinderung' && !e.noticeId).forEach(e => {
+    const n = daysBetween(e.date, t);
+    out.push({ sev: 'hoch', title: `Behinderung seit ${n} Tag${n === 1 ? '' : 'en'} – keine Behinderungsanzeige`, text: `${fmt(e.date)}: ${e.text}`, action: { label: 'Anzeige entwerfen', fn: `noticeFromEvent('${e.id}','behinderung')` } });
+  });
+  S.events.filter(e => e.type === 'risiko' && !e.noticeId).forEach(e => {
+    const act = S.activities.find(a => a.id === e.activityId); const n = act ? daysBetween(t, act.start) : null;
+    out.push({ sev: n !== null && n <= 3 ? 'hoch' : 'mittel', title: act ? `Drohende Behinderung: „${act.name}" beginnt in ${n} Tag${n === 1 ? '' : 'en'}` : 'Risiko erkannt', text: e.text, action: { label: 'Vorsorglich anzeigen', fn: `noticeFromEvent('${e.id}','behinderung')` } });
+  });
+  progress(asOf).filter(p => p.status === 'verzug').forEach(p => {
+    out.push({ sev: 'mittel', title: `${p.name}: ca. ${num(p.daysBehind, 1)} Tage Verzug`, text: `Ist ${num(p.ac)} ${p.unit} statt Soll ${num(p.p)} ${p.unit} (${num(p.pctPlan * 100)} %) zum ${fmt(asOf)}. Ursache dokumentiert und angezeigt?`, action: { label: 'Ursache erfassen', fn: `prefillCapture('${p.id}')` } });
+  });
+  S.notices.filter(n => n.status === 'entwurf').forEach(n => {
+    out.push({ sev: 'niedrig', title: `${TYPES[n.type].title} noch nicht freigegeben`, text: shortDesc(n) || 'Entwurf wartet auf Prüfung durch die Bauleitung.', action: { label: 'Öffnen', fn: `openNotice('${n.id}')` } });
+  });
+  return out;
+}
+
+/* ---------- KI-Anbindung (optional) ---------- */
+async function callLLM(system, user, maxTokens = 1500) {
+  const ctrl = new AbortController(); const to = setTimeout(() => ctrl.abort(), 60000);
+  try {
+    if (CFG.provider === 'openai') {
+      const r = await fetch((CFG.baseUrl || 'https://api.openai.com/v1').replace(/\/$/, '') + '/chat/completions', {
+        method: 'POST', signal: ctrl.signal,
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + CFG.apiKey.trim() },
+        body: JSON.stringify({ model: CFG.model, max_completion_tokens: maxTokens, messages: [{ role: 'system', content: system }, { role: 'user', content: user }] })
+      });
+      const j = await r.json(); if (!r.ok) throw new Error(j.error?.message || ('HTTP ' + r.status));
+      return j.choices[0].message.content;
+    }
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', signal: ctrl.signal,
+      headers: { 'Content-Type': 'application/json', 'x-api-key': CFG.apiKey.trim(), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({ model: CFG.model, max_tokens: maxTokens, system, messages: [{ role: 'user', content: user }] })
+    });
+    const j = await r.json(); if (!r.ok) throw new Error(j.error?.message || ('HTTP ' + r.status));
+    return j.content.map(c => c.text || '').join('');
+  } finally { clearTimeout(to); }
+}
+function parseJSON(txt) { const a = txt.indexOf('{'), b = txt.lastIndexOf('}'); if (a < 0 || b < a) throw new Error('Keine JSON-Antwort'); return JSON.parse(txt.slice(a, b + 1)); }
+const SYS = 'Du bist BauAssist, ein Assistent für Bauleiter auf deutschen Baustellen. Du erstellst ausschließlich Entwürfe und gibst keine Rechtsberatung; die Bauleitung prüft und verantwortet alles. Erfinde niemals Fakten. Antworte ausschließlich mit einem gültigen JSON-Objekt ohne weiteren Text.';
+function projectContext() {
+  const P = S.project, asOf = lastReportDate();
+  return `Bauvorhaben: ${P.name}, ${P.address} (Vertrag ${P.contractNo})
+Auftraggeber (AG): ${P.client.name}, ${P.client.contact}
+Auftragnehmer (wir): ${P.contractor.name}, Bauleiter ${P.siteManager}
+Heute: ${fmt(iso(today()))}, ${nowTime()} Uhr
+Terminplan und Leistungsstand (Stand ${fmt(asOf)}):
+${progress(asOf).map(p => `- ${p.name} (${p.trade}): ${fmt(p.start)}–${fmt(p.end)}, Ist ${num(p.ac)} / Soll ${num(p.p)} ${p.unit}, Status ${STL[p.status]}${p.daysBehind >= 0.3 ? `, Verzug ca. ${num(p.daysBehind, 1)} Tage` : ''}`).join('\n')}
+Letzte Bautagebuch-Einträge:
+${S.events.slice().sort(evSort).slice(0, 6).map(e => `- ${fmt(e.date)} ${e.time || ''} [${EVT[e.type]}] ${e.text}`).join('\n')}`;
+}
+
+/* ---------- Analyse einer Eingabe → strukturierte Felder ---------- */
+async function extract(text, opts = {}) {
+  if (hasAI()) {
+    try { const r = await extractAI(text, opts); r.via = 'ki'; return r; }
+    catch (e) { console.error(e); toast('KI nicht erreichbar (' + e.message + ') – Offline-Analyse wird verwendet.', 5000); }
+  }
+  const r = extractOffline(text, opts); r.via = 'offline'; return r;
+}
+
+async function extractAI(text, opts) {
+  const typeSpec = Object.entries(TYPES).map(([k, T]) => `- "${k}" = ${T.title} (${T.ref}). Felder: ${T.fields.map(f => `${f.k} = ${f.l}${f.req ? ' [Pflicht]' : ''}`).join('; ')}`).join('\n');
+  const when = opts.refDate ? `Die Eingabe bezieht sich auf den ${fmt(opts.refDate)}${opts.refTime ? ', ' + opts.refTime + ' Uhr' : ''}.` : `Die Eingabe stammt von heute, ${fmt(iso(today()))}, ${nowTime()} Uhr.`;
+  const user = `PROJEKTKONTEXT:
+${projectContext()}
+
+SCHREIBENTYPEN:
+${typeSpec}
+
+EINGABE DES BAULEITERS (kann in einer anderen Sprache als Deutsch sein):
+"""${text}"""
+${when}
+${opts.forceType ? `Der Schreibentyp ist vorgegeben: "${opts.forceType}".` : ''}
+
+AUFGABE:
+1. Wähle den passenden Schreibentyp – oder "tagebuch", wenn nur ein Bautagebuch-Eintrag nötig ist.
+2. Fülle die Felder auf Deutsch in sachlicher, formeller Sprache (übersetze, falls nötig). Datum als TT.MM.JJJJ, Uhrzeit als HH:MM Uhr.
+3. Verwende NUR Fakten aus der Eingabe oder dem Projektkontext. Unbekanntes bleibt leer ("").
+4. Wenn der Projektkontext einen passenden Verzug enthält, fülle bei Behinderungen das Feld "bauzeit" damit (Quelle "projekt").
+5. Gib für jedes gefüllte Feld die Quelle an: "diktat" (steht in der Eingabe), "projekt" (aus dem Projektkontext) oder "ki" (von dir abgeleitet).
+6. Formuliere für jedes leere Pflichtfeld eine kurze, konkrete Rückfrage an den Bauleiter.
+
+ANTWORT (nur JSON):
+{"type":"behinderung|mehrkosten|bedenken|maengel|tagebuch","fields":{"feld":"wert"},"sources":{"feld":"diktat|projekt|ki"},"questions":{"feld":"Rückfrage"},"tagebuch":"sachlicher Bautagebuch-Eintrag auf Deutsch, 1–2 Sätze","sprache":"erkannte Sprache"}`;
+  const r = parseJSON(await callLLM(SYS, user));
+  if (opts.forceType) r.type = opts.forceType;
+  if (r.type !== 'tagebuch' && !TYPES[r.type]) r.type = 'behinderung';
+  return r;
+}
+
+/* Regelbasierte Offline-Analyse: damit die Demo auch ohne Internet/KI läuft. */
+function matchActivity(text) { const t = text.toLowerCase(); return S.activities.find(a => a.keywords.some(k => t.includes(k))); }
+function clauses(text) { return text.split(/(?<!\bca|\bz\. ?B|\bNr|\bggf|\bbzw)\.\s+|[;\n]|,\s+/).map(s => s.trim().replace(/\.$/, '')).filter(Boolean); }
+function extractOffline(text, opts = {}) {
+  const t = text.toLowerCase();
+  const score = re => (t.match(re) || []).length;
+  const scores = {
+    maengel: score(/undicht|mangel|mängel|\briss|beschädig|nachunternehmer|fehlerhaft|nacharbeit/g),
+    bedenken: score(/bedenken|kritisch|ungeeignet|widersp|gutachten|nicht geeignet|sehe ich/g),
+    mehrkosten: score(/zusätzlich|angeordnet|nicht im lv|nachtrag|mehrkosten|extra|wünscht|beauftragt/g),
+    behinderung: score(/\bsteht\b|stillstand|warten|wartet|keine freigabe|fehlt|fehlen|behindert|verzög|blockiert|gesperrt|ausstehend|nicht eingegangen/g)
+  };
+  const best = Object.entries(scores).sort((a, b) => b[1] - a[1])[0];
+  const type = opts.forceType || (best[1] > 0 ? best[0] : 'tagebuch');
+  const refDate = opts.refDate || iso(today());
+  const tm = text.match(/(\d{1,2})[:.](\d{2})\s*uhr/i) || text.match(/(\d{1,2})\s*uhr/i) || text.match(/\b(\d{1,2}):(\d{2})\b/);
+  const time = opts.refTime || (tm ? String(tm[1]).padStart(2, '0') + ':' + (tm[2] || '00') : null);
+  const when = fmt(refDate) + (time ? `, ${time} Uhr` : '');
+  const C = clauses(text), sents = text.split(/(?<=[.!?])\s+/).filter(Boolean);
+  const fields = {}, sources = {};
+  const set = (k, v, src) => { if (v && String(v).trim()) { fields[k] = cap(String(v).trim().replace(/\s+/g, ' ')); sources[k] = src; } };
+  const act = matchActivity(text);
+  if (type === 'behinderung') {
+    const axis = (text.match(/achse\s+[a-z0-9]+(?:\s*(?:bis|–|-)\s*[a-z0-9]+)?/i) || [])[0];
+    set('betroffen', [act ? act.name : '', axis ? 'Bereich ' + axis.replace(/^achse/i, 'Achse') : ''].filter(Boolean).join(', '), act ? 'projekt' : 'diktat');
+    if (time || opts.refDate || /heute|seit/i.test(text)) set('beginn', when, opts.refDate ? 'projekt' : 'diktat');
+    const cm = text.match(/\b(weil|da|wegen|aufgrund)\s+([^.]+?)(?=\.|,\s*(?:zwei|drei|vier|wir|der|die|das)\b|$)/i);
+    if (cm) set('ursache', /weil|da/i.test(cm[1]) ? `Die Ausführung ist nicht möglich, ${cm[1].toLowerCase()} ${cm[2]}.` : `Die Ausführung ist ${cm[1].toLowerCase()} ${cm[2]} nicht möglich.`, 'diktat');
+    else set('ursache', sents[0], 'diktat');
+    set('auswirkung', C.filter(c => /wart|stillstand|\bsteht\b|\bmann\b|arbeiter|gerät|bagger|kolonne|eingeschränkt|gestoppt/i.test(c) && !/^(weil|da|wegen|aufgrund)\b/i.test(c) && !(fields.ursache && fields.ursache.includes(c))).join('; '), 'diktat');
+    set('massnahmen', C.filter(c => /provisorisch|weiter\b|umgesetzt|informiert|ausweich|umdisponiert|pumpe/i.test(c)).join('; '), 'diktat');
+    if (act) { const p = progress(lastReportDate()).find(x => x.id === act.id); if (p && p.status !== 'geplant' && p.status !== 'fertig') set('bauzeit', `Leistungsstand ${act.name} zum ${fmt(lastReportDate())}: ${num(p.ac)} ${act.unit} Ist gegenüber ${num(p.p)} ${act.unit} Soll – rechnerischer Rückstand ca. ${num(p.daysBehind, 1)} Arbeitstage.`, 'projekt'); }
+    if (/freigabe/i.test(text)) set('mitwirkung', 'Herbeiführung der erforderlichen Freigabe bzw. Klärung mit dem zuständigen Leitungsträger', 'ki');
+    if (/pläne|plan\b|planung/i.test(text) && !fields.mitwirkung) set('mitwirkung', 'Übergabe der freigegebenen Ausführungspläne', 'ki');
+  }
+  if (type === 'mehrkosten') {
+    const person = (text.match(/\b(Herr|Frau)\s+[A-ZÄÖÜ][a-zäöüß]+/) || [])[0];
+    if (person || /angeordnet|beauftragt|wünscht/i.test(text)) set('anordnung', `${when}${person ? ' durch ' + person.replace(/^Herr /, 'Herrn ') : ''}${/bauherr|ag\b/i.test(text) ? ' (Auftraggeber)' : ''}${/mündlich/i.test(text) ? ', mündlich' : ''}`, 'diktat');
+    const lm = text.match(/dass wir\s+(?:zusätzlich\s+)?(.+?)\s+(?:bauen|herstellen|ausführen|liefern|einbauen|erstellen|machen|anlegen)\s+(?:sollen|müssen)/i);
+    set('leistung', lm ? lm[1].replace(/^(eine|einen|ein)\s+/i, '') : C.find(c => /zusätzlich|extra/i.test(c)), 'diktat');
+    set('umfang', C.find(c => /\bca\.?\s*\d|\d+\s*(m|meter|m²|m³|qm|stk|stück|t)\b/i.test(c)), 'diktat');
+    if (/nicht im lv|nicht im leistungsverzeichnis|nicht beauftragt|nicht vorgesehen/i.test(text)) set('grund', 'Die Leistung ist im Leistungsverzeichnis nicht enthalten.', 'diktat');
+  }
+  if (type === 'bedenken') {
+    const geg = C.find(c => /(laut|im|der)\s+plan|\blv\b|vorgesehen|ausschreibung/i.test(c));
+    set('gegenstand', geg ? geg.replace(/^(aber|und|jedoch)\s+/i, '') : (act ? 'Vorgesehene Ausführung ' + act.name : ''), 'diktat');
+    set('bedenken', C.find(c => /gutachten|kritisch|nicht geeignet|ungeeignet|widersp|betonangreifend/i.test(c) && c !== geg), 'diktat');
+    if (/entscheidung|vor dem|bis/i.test(text) && act) set('frist', `${fmt(iso(addDays(parseIso(act.start), -1)))} (vor Beginn „${act.name}" am ${fmt(act.start)})`, 'projekt');
+  }
+  if (type === 'maengel') {
+    set('empfaenger', (text.match(/[Nn]achunternehmer\s+(?:[Ff]irma\s+)?([A-ZÄÖÜ][\wäöüß-]*(?:\s+[A-ZÄÖÜ][\wäöüß-]*)*)/) || [])[1], 'diktat');
+    const mg = C.find(c => /undicht|riss|beschädig|fehlerhaft|mangel|nicht fachgerecht/i.test(c));
+    set('mangel', mg ? mg.replace(/\s*vo[nm]\s+(?:dem\s+)?[Nn]achunternehmer\s+[A-ZÄÖÜ][\wäöüß-]*(?:\s+[A-ZÄÖÜ][\wäöüß-]*)*/, '') : '', 'diktat');
+    set('ort', (text.match(/(kellerwand|wand|decke|bodenplatte|stütze|treppenhaus|dach)[^,.]*?achse\s*\w+/i) || text.match(/achse\s*\w+/i) || [])[0], 'diktat');
+    if (/heute/i.test(text)) set('festgestellt', fmt(refDate), 'diktat'); else if (/gestern/i.test(text)) set('festgestellt', fmt(iso(addDays(parseIso(refDate), -1))), 'diktat');
+  }
+  return { type, fields, sources, questions: {}, tagebuch: text };
+}
+
+/* ---------- Schreiben ---------- */
+function createNotice(r, origin) {
+  const type = TYPES[r.type] ? r.type : 'behinderung', T = TYPES[type], fields = {};
+  T.fields.forEach(fd => { const v = String(r.fields?.[fd.k] || '').trim(); fields[fd.k] = { value: v, src: v ? (SRC[r.sources?.[fd.k]] ? r.sources[fd.k] : 'ki') : 'leer' }; });
+  const n = { id: uid('n'), type, status: 'entwurf', createdAt: new Date().toISOString(), fields, questions: r.questions || {}, evidence: [], photos: [], origin: origin || '', via: r.via || 'offline', aiHints: [] };
+  S.notices.unshift(n); return n;
+}
+const vals = n => Object.fromEntries(Object.entries(n.fields).map(([k, f]) => [k, (f.value || '').trim()]));
+const missing = n => TYPES[n.type].fields.filter(fd => fd.req && !(n.fields[fd.k]?.value || '').trim());
+function shortDesc(n) { const v = vals(n); return trunc(v.betroffen || v.leistung || v.gegenstand || v.mangel || '', 70); }
+
+function letterHTML(n) {
+  const T = TYPES[n.type], v = vals(n), P = S.project;
+  const F = k => { if (v[k]) return esc(v[k]); const fd = T.fields.find(x => x.k === k); return `<mark class="miss">[${esc(fd ? fd.l : k)}]</mark>`; };
+  const recip = T.to === 'client' ? `${esc(P.client.name)}<br>${esc(P.client.contact)}<br>${esc(P.client.street)}<br>${esc(P.client.city)}` : F('empfaenger');
+  const date = fmt(iso(n.approvedAt ? new Date(n.approvedAt) : today()));
+  const ev = n.evidence.map(evById).filter(Boolean);
+  const anl = [...ev.map(e => `${e.source} vom ${fmt(e.date)}${e.time ? ', ' + e.time + ' Uhr' : ''}: ${e.text}`), ...n.photos.map((p, i) => `Foto ${i + 1}${p.caption ? ': ' + p.caption : ''}`)];
+  return `<div class="letter">
+  ${n.status === 'entwurf' ? '<div class="wm">ENTWURF – noch nicht durch die Bauleitung freigegeben</div>' : ''}
+  <div class="l-sender">${esc(P.contractor.name)} · ${esc(P.contractor.street)} · ${esc(P.contractor.city)}</div>
+  <div class="l-recip">${recip}</div>
+  <div class="l-date">${esc(P.contractor.city.replace(/^\d+\s*/, ''))}, ${date}</div>
+  <div class="l-bv"><b>Bauvorhaben:</b> ${esc(P.name)}, ${esc(P.address)}<br><b>Vertrags-Nr.:</b> ${esc(P.contractNo)}</div>
+  <div class="l-subj">${T.subject(F)}</div>
+  <p>Sehr geehrte Damen und Herren,</p>
+  ${T.body(F, v).map(p => `<p>${p}</p>`).join('')}
+  <p>Mit freundlichen Grüßen</p>
+  <p class="l-sign">${esc(P.siteManager)}<br>Bauleitung · ${esc(P.contractor.name)}</p>
+  ${anl.length ? `<div class="l-anl"><b>Anlagen:</b><ol>${anl.map(a => `<li>${esc(a)}</li>`).join('')}</ol></div>` : ''}
+  ${n.photos.length ? `<div class="l-photos">${n.photos.map(p => `<img src="${p.data}" alt="">`).join('')}</div>` : ''}
+</div>`;
+}
+
+function baseHints(n) {
+  const h = [], v = vals(n);
+  missing(n).forEach(fd => h.push({ sev: 'hoch', t: `Pflichtangabe fehlt: ${fd.l}` }));
+  if (!n.evidence.length && !n.photos.length) h.push({ sev: 'mittel', t: 'Keine Belege verknüpft. Bautagebuch-Einträge und Fotos stärken die Nachweisführung.' });
+  if (n.type === 'behinderung') { const d = parseDE(v.beginn); if (d) { const days = daysBetween(iso(d), iso(today())); if (days >= 2) h.push({ sev: 'hoch', t: `Die Behinderung besteht seit ${days} Tagen – Behinderungsanzeigen sollten unverzüglich und schriftlich erfolgen.` }); } }
+  if (n.type === 'mehrkosten') {
+    if (/mündlich/i.test(v.anordnung || '') || /mündlich/i.test(n.origin || '')) h.push({ sev: 'mittel', t: 'Mündliche Anordnung: schriftliche Bestätigung durch den AG einholen.' });
+    h.push({ sev: 'niedrig', t: 'Die Ankündigung sollte dem AG vor Beginn der Ausführung zugehen.' });
+  }
+  if (n.type === 'bedenken' && !v.vorschlag) h.push({ sev: 'niedrig', t: 'Tipp: Ein Alternativvorschlag beschleunigt die Entscheidung des AG.' });
+  if (n.type === 'maengel') { const d = parseDE(v.frist); if (d && daysBetween(iso(today()), iso(d)) < 5) h.push({ sev: 'mittel', t: 'Die Frist zur Mängelbeseitigung wirkt sehr kurz – ist sie angemessen?' }); }
+  return h;
+}
+function hintsHTML(n) {
+  const all = [...baseHints(n), ...(n.aiHints || [])];
+  return all.length ? all.map(h => `<div class="alert ${h.sev || 'niedrig'}" style="padding:8px 10px;font-size:13.5px"><div class="x">${esc(h.t)}</div></div>`).join('') : '<p class="muted">Keine Auffälligkeiten.</p>';
+}
+
+/* ---------- Export ---------- */
+function docHTML(inner, title) {
+  const css = [...document.styleSheets[0].cssRules].map(r => r.cssText).filter(c => /letter|l-|mark\.miss|\.wm/.test(c)).join('\n');
+  return `<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><title>${esc(title)}</title><style>body{font-family:Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.45;margin:0;color:#111}.letter{max-width:170mm;margin:0 auto;padding:8mm 0}@page{size:A4;margin:15mm 20mm}${css}</style></head><body>${inner}</body></html>`;
+}
+function exportDoc(kind, html, title) {
+  if (kind === 'pdf') {
+    const w = window.open('', '_blank'); if (!w) { toast('Pop-up blockiert – bitte Pop-ups für diese Seite erlauben.'); return; }
+    w.document.open(); w.document.write(docHTML(html, title)); w.document.close(); w.focus(); setTimeout(() => w.print(), 400);
+  } else {
+    const blob = new Blob(['﻿' + docHTML(html, title)], { type: 'application/msword' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = title.replace(/[^\wäöüÄÖÜß.-]+/g, '_') + '.doc';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  }
+}
+
+/* ---------- Navigation ---------- */
+let TAB = 'overview', curNoticeId = null, capText = '', repDate = null, sumText = '', sumRes = null;
+function go(tab) { TAB = tab; render(); window.scrollTo(0, 0); }
+function render() {
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('active', b.dataset.tab === TAB));
+  $('#hdr-proj').textContent = S.project.name;
+  const m = $('#mode'); m.className = 'mode' + (hasAI() ? ' ai' : ''); m.textContent = hasAI() ? '● KI aktiv · ' + CFG.model : '○ Demo-Modus (offline)';
+  const hi = computeAlerts().filter(a => a.sev === 'hoch').length; $('#alert-pill').innerHTML = hi ? `<span class="pill">${hi}</span>` : '';
+  ({ overview: renderOverview, capture: renderCapture, notices: renderNotices, report: renderReport, summary: renderSummary, settings: renderSettings })[TAB]($('#main'));
+}
+
+/* ---------- Übersicht ---------- */
+function eventsTable(list) {
+  if (!list.length) return '<p class="muted">Keine Einträge.</p>';
+  return `<table class="t"><tr><th>Datum</th><th>Art</th><th>Eintrag</th><th>Quelle</th><th>Schreiben</th></tr>${list.map(e => {
+    const n = e.noticeId && S.notices.find(x => x.id === e.noticeId);
+    return `<tr><td style="white-space:nowrap">${fmt(e.date)}<br><span class="muted">${esc(e.time || '')}</span></td><td><span class="tag ${e.type}">${EVT[e.type] || e.type}</span></td><td>${esc(e.text)}${e.original ? `<br><span class="muted">Original: „${esc(trunc(e.original, 120))}"</span>` : ''}</td><td class="muted">${esc(e.source)}</td><td>${n ? `<a href="#" onclick="openNotice('${n.id}');return false">${TYPES[n.type].title}</a><br><span class="st ${n.status}">${STATUS[n.status]}</span>` : '–'}</td></tr>`;
+  }).join('')}</table>`;
+}
+function kpi(v, l, bad) { return `<div class="kpi ${bad ? 'bad' : ''}"><b>${v}</b><span>${l}</span></div>`; }
+function renderOverview(m) {
+  const asOf = lastReportDate(), pr = progress(asOf), al = computeAlerts();
+  const maxD = Math.max(0, ...pr.map(p => p.daysBehind)), hi = al.filter(a => a.sev === 'hoch').length;
+  m.innerHTML = `
+  <div class="grid g4" style="margin-bottom:16px">
+    ${kpi(hi, 'kritische Warnungen', hi > 0)}${kpi(num(maxD, 1), 'Tage max. Verzug', maxD >= 1)}
+    ${kpi(S.notices.filter(n => n.status === 'entwurf').length, 'Schreiben im Entwurf')}${kpi(S.notices.filter(n => n.status !== 'entwurf').length, 'Schreiben freigegeben / versendet')}
+  </div>
+  <div class="grid g2">
+    <div class="card"><h2>Warnungen & Vorschläge</h2><p class="muted">Automatisch erkannt aus Bautagebuch, Terminplan und Schriftverkehr.</p>
+      ${al.length ? al.map(a => `<div class="alert ${a.sev}"><div class="x"><div class="t">${esc(a.title)}</div><div class="d">${esc(a.text)}</div></div>${a.action ? `<button class="btn sm" onclick="${a.action.fn}">${esc(a.action.label)}</button>` : ''}</div>`).join('') : '<p class="muted">Keine offenen Warnungen.</p>'}
+    </div>
+    <div class="card"><h2>Soll-Ist-Vergleich</h2><p class="muted">Stand ${fmt(asOf)} · berechnet aus den Bautagesberichten</p>
+      <table class="t"><tr><th>Leistung</th><th>Ist / Soll</th><th>Fortschritt</th><th>Status</th></tr>
+      ${pr.map(p => `<tr><td><b>${esc(p.name)}</b><br><span class="muted">${esc(p.trade)} · ${fmt(p.start)} – ${fmt(p.end)}</span></td>
+        <td style="white-space:nowrap">${num(p.ac)} / ${num(p.p)} ${p.unit}</td>
+        <td><div class="bar ${p.status === 'verzug' ? 'late' : ''}"><i style="width:${Math.min(100, p.pctTotal * 100)}%"></i><u style="left:${Math.min(100, p.p / p.qty * 100)}%"></u></div><span class="muted">${num(p.pctTotal * 100)} % von ${num(p.qty)} ${p.unit}</span></td>
+        <td><span class="st ${p.status.replace(' ', '')}">${STL[p.status]}${p.status === 'verzug' ? ' · ' + num(p.daysBehind, 1) + ' T' : ''}</span></td></tr>`).join('')}
+      </table><p class="muted">Balken = Ist-Fortschritt, Strich = Soll-Stand.</p>
+    </div>
+  </div>
+  <div class="card"><h2>Bautagebuch – letzte Einträge</h2>${eventsTable(S.events.slice().sort(evSort).slice(0, 6))}</div>
+  <details class="card"><summary><b>Demo-Ablauf: „Ein Tag mit BauAssist"</b> <span class="muted">(für die Präsentation)</span></summary><ol>
+    <li><b>07:30 – Übersicht:</b> Der Assistent meldet von sich aus „Behinderung seit 3 Tagen – keine Anzeige" und „Pläne fehlen". Ein Klick erzeugt den Entwurf.</li>
+    <li><b>10:15 – Erfassen:</b> Diktat „Bagger steht seit 10 Uhr…" → Behinderungsanzeige in Sekunden, inkl. Verzug aus dem Soll-Ist-Vergleich und Bautagebuch als Anlage.</li>
+    <li><b>10:20 – Polier diktiert auf Polnisch</b> → formelles deutsches Schreiben (KI-Modus).</li>
+    <li><b>11:00 – Bauherr ordnet Baustraße mündlich an</b> → Mehrkostenanzeige vor Ausführung, Hinweis „schriftlich bestätigen lassen".</li>
+    <li><b>14:00 – Protokoll der Baubesprechung einfügen</b> → offene Punkte, Fristen, Risiken → direkt Entwurf erstellen.</li>
+    <li><b>17:00 – Bautagesbericht</b> per Diktat befüllen → PDF/Word.</li>
+    <li><b>Immer:</b> Nichts verlässt die Baustelle ohne Freigabe der Bauleitung. Jede Angabe zeigt, woher sie stammt.</li>
+  </ol></details>`;
+}
+
+/* ---------- Erfassen ---------- */
+const CAP_SAMPLES = [
+  { l: '🚜 Bagger steht', lang: 'de-DE', t: 'Bagger steht seit 10 Uhr in Achse C bis D, weil die Telekom immer noch keine Freigabe für die Leitung gegeben hat. Zwei Mann und der Bagger warten, wir arbeiten provisorisch in Achse A weiter.' },
+  { l: '🇵🇱 Polier (Polnisch)', lang: 'pl-PL', t: 'Koparka stoi od 10:00, bo Telekom nadal nie dał zgody na prace przy kablu w osiach C–D. Dwóch pracowników i koparka czekają, pracujemy tymczasowo w osi A.' },
+  { l: '➕ Zusatzleistung', lang: 'de-DE', t: 'Herr Schmidt vom Bauherrn hat heute um 9 Uhr mündlich angeordnet, dass wir zusätzlich eine Baustraße zur Nachbarzufahrt bauen sollen, ca. 40 Meter Schotter. Das ist nicht im LV.' },
+  { l: '⚠️ Bedenken Beton', lang: 'de-DE', t: 'Laut Bodengutachten ist das Grundwasser betonangreifend, aber im Plan für die Bodenplatte steht nur Beton C25/30 ohne Expositionsklasse XA. Das sehe ich kritisch, die Entscheidung brauchen wir vor dem Betonieren.' },
+  { l: '💧 Mangel NU', lang: 'de-DE', t: 'Die Abdichtung der Kellerwand Achse 3 vom Nachunternehmer Abdichtungstechnik Meier ist an zwei Stellen undicht, festgestellt heute bei der Begehung.' }
+];
+function renderCapture(m) {
+  m.innerHTML = `<div class="grid g2"><div class="card">
+    <h2>Situation erfassen</h2>
+    <p class="muted">Diktieren oder in Stichworten tippen. Der Assistent erkennt die Art des Vorgangs, füllt das passende Schreiben aus und fragt nach, was fehlt.</p>
+    <div class="row"><select id="cap-lang" style="width:auto">${LANGS}</select><button class="btn mic" id="cap-mic" onclick="toggleMic('cap-text','cap-lang','cap-mic')">🎤 Diktieren</button></div>
+    <textarea id="cap-text" rows="6" placeholder="z. B. „Bagger steht seit 10 Uhr, weil …“" oninput="capText=this.value">${esc(capText)}</textarea>
+    <div class="chips">${CAP_SAMPLES.map((s, i) => `<span class="chip" onclick="useSample(${i})">${s.l}</span>`).join('')}</div>
+    <div class="row"><button class="btn pri" id="cap-go" onclick="runCapture()">Analysieren & Entwurf erstellen</button><button class="btn" onclick="captureDiaryOnly()">Nur ins Bautagebuch</button></div>
+    ${hasAI() ? '' : '<p class="muted">Demo-Modus: regelbasierte Analyse für deutsche Eingaben. Für andere Sprachen und freie Formulierungen in den Einstellungen einen API-Key hinterlegen.</p>'}
+  </div>
+  <div class="card"><h2>So funktioniert's</h2>
+    <ol style="margin:0;padding-left:20px;line-height:1.7">
+      <li><b>Erfassen</b> – Sprache oder Text, auch auf Polnisch, Rumänisch, Türkisch, Englisch.</li>
+      <li><b>Verstehen</b> – Art des Vorgangs erkennen, Fakten in Pflichtfelder übernehmen.</li>
+      <li><b>Verknüpfen</b> – Terminplan, Soll-Ist und Bautagebuch automatisch ergänzen.</li>
+      <li><b>Nachfragen</b> – fehlende Pflichtangaben gezielt erfragen statt raten.</li>
+      <li><b>Freigeben</b> – die Bauleitung prüft, ändert und gibt frei. Erst dann Export.</li>
+    </ol>
+    <p class="disc">⚖️ BauAssist liefert Entwürfe – keine Rechtsberatung. Die Verantwortung für Inhalt und Versand liegt bei der Bauleitung bzw. dem Unternehmen.</p>
+  </div></div>`;
+}
+function useSample(i) { const s = CAP_SAMPLES[i]; capText = s.t; $('#cap-text').value = s.t; $('#cap-lang').value = s.lang; }
+function prefillCapture(actId) {
+  const p = progress(lastReportDate()).find(x => x.id === actId);
+  capText = `${p.name} liegt ca. ${num(p.daysBehind, 1)} Tage hinter dem Plan. Ursache: `; go('capture');
+  const t = $('#cap-text'); t.focus(); t.setSelectionRange(t.value.length, t.value.length);
+}
+async function runCapture() {
+  const text = $('#cap-text').value.trim(); if (!text) { toast('Bitte zuerst etwas diktieren oder eingeben.'); return; }
+  const lang = $('#cap-lang').value;
+  if (!hasAI() && !lang.startsWith('de')) { toast('Fremdsprachige Eingaben brauchen den KI-Modus – bitte in den Einstellungen einen API-Key hinterlegen.', 6000); return; }
+  setBusy('#cap-go', true, 'Analysiere…'); const t0 = performance.now();
+  const r = await extract(text, { lang });
+  setBusy('#cap-go', false);
+  const evType = { behinderung: 'behinderung', mehrkosten: 'anordnung', bedenken: 'bedenken', maengel: 'mangel' }[r.type] || 'info';
+  const diary = (r.tagebuch || text).trim();
+  const ev = { id: uid('e'), date: iso(today()), time: nowTime(), type: evType, source: 'Diktat', text: diary, noticeId: null, original: diary !== text ? text : undefined };
+  S.events.push(ev);
+  if (r.type === 'tagebuch') { save(); capText = ''; toast('Ins Bautagebuch übernommen – kein Schreiben erforderlich.'); go('overview'); return; }
+  const n = createNotice(r, text); n.evidence = [ev.id]; ev.noticeId = n.id; n.genSecs = (performance.now() - t0) / 1000;
+  save(); capText = ''; openNotice(n.id);
+}
+function captureDiaryOnly() {
+  const text = $('#cap-text').value.trim(); if (!text) { toast('Bitte zuerst etwas eingeben.'); return; }
+  S.events.push({ id: uid('e'), date: iso(today()), time: nowTime(), type: 'info', source: 'Diktat', text, noticeId: null });
+  save(); capText = ''; toast('Ins Bautagebuch übernommen.'); render();
+}
+async function noticeFromEvent(eid, type) {
+  const e = evById(eid); toast('Erstelle Entwurf…');
+  const r = await extract(e.text, { forceType: type, refDate: e.date, refTime: e.time });
+  const n = createNotice(r, e.text); n.evidence = [e.id]; e.noticeId = n.id; save(); openNotice(n.id);
+}
+
+/* ---------- Spracheingabe (Web Speech API) ---------- */
+let rec = null, recBtn = null;
+function toggleMic(targetId, langId, btnId) {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { toast('Spracherkennung wird von diesem Browser nicht unterstützt – bitte Chrome, Edge oder Safari verwenden.', 5000); return; }
+  if (rec) { rec.stop(); return; }
+  const ta = $('#' + targetId), base = ta.value.trim() ? ta.value.trim() + ' ' : '';
+  rec = new SR(); rec.lang = $('#' + langId).value; rec.interimResults = true; rec.continuous = true;
+  recBtn = $('#' + btnId); recBtn.classList.add('on'); recBtn.textContent = '■ Stopp';
+  rec.onresult = ev => { let s = ''; for (let i = 0; i < ev.results.length; i++) s += ev.results[i][0].transcript; ta.value = base + s; ta.dispatchEvent(new Event('input')); };
+  rec.onerror = ev => toast('Mikrofon: ' + ev.error + (ev.error === 'not-allowed' ? ' – App über http://localhost öffnen und Mikrofon erlauben.' : ''), 5000);
+  rec.onend = () => { if (recBtn) { recBtn.classList.remove('on'); recBtn.textContent = '🎤 Diktieren'; } rec = null; };
+  rec.start();
+}
+
+/* ---------- Schreiben: Liste & Editor ---------- */
+function openNotice(id) { curNoticeId = id; if (TAB !== 'notices') go('notices'); else render(); }
+function renderNotices(m) {
+  if (!curNotice() && S.notices[0]) curNoticeId = S.notices[0].id;
+  m.innerHTML = `<div class="layout"><div>
+    <div class="row"><select id="new-type">${Object.entries(TYPES).map(([k, T]) => `<option value="${k}">${T.title}</option>`).join('')}</select><button class="btn pri" onclick="newBlank()">+ Neu</button></div>
+    <div class="nlist">${S.notices.length ? S.notices.map(n => `<div class="it ${n.id === curNoticeId ? 'sel' : ''}" onclick="openNotice('${n.id}')"><b>${esc(TYPES[n.type].title)}</b> <span class="st ${n.status}">${STATUS[n.status]}</span><small>${esc(shortDesc(n))}</small><small>${fmtDT(n.createdAt)}</small></div>`).join('') : '<p class="muted">Noch keine Schreiben. Erfassen Sie eine Situation oder nutzen Sie eine Warnung auf der Übersicht.</p>'}</div>
+  </div><div id="editor"></div></div>`;
+  renderEditor();
+}
+function renderEditor() {
+  const box = $('#editor'); if (!box) return; const n = curNotice(); if (!n) { box.innerHTML = ''; return; }
+  const T = TYPES[n.type], ro = n.status !== 'entwurf', miss = missing(n);
+  const took = T.fields.filter(fd => n.fields[fd.k]?.value && n.fields[fd.k].src !== 'manuell').length;
+  box.innerHTML = `<div class="ed"><div class="card">
+    <div class="row" style="justify-content:space-between;margin-top:0"><h2 style="margin:0">${esc(T.title)} <span class="muted">${esc(T.ref)}</span></h2><span class="st ${n.status}">${STATUS[n.status]}</span></div>
+    ${n.origin ? `<div class="banner"><b>Eingabe:</b> „${esc(n.origin)}"<br><span class="muted">${n.via === 'ki' ? 'KI-Analyse' : 'Offline-Analyse'}${n.genSecs ? ` in ${num(n.genSecs, 1)} s` : ''} · ${took} Angaben übernommen · ${miss.length ? `<b style="color:var(--red)">${miss.length} Rückfrage${miss.length > 1 ? 'n' : ''} offen</b>` : 'alle Pflichtangaben vorhanden'}</span></div>` : ''}
+    <div class="muted">Herkunft:<span class="src diktat">Diktat</span><span class="src projekt">Projektdaten</span><span class="src ki">KI-Vorschlag</span><span class="src manuell">manuell</span><span class="src leer">fehlt</span></div>
+    ${T.fields.map(fd => { const f = n.fields[fd.k] || { value: '', src: 'leer' }, has = !!f.value.trim(), isMiss = fd.req && !has;
+      return `<div class="fld ${isMiss ? 'miss' : ''}"><label>${esc(fd.l)}${fd.req ? ' *' : ''}<span class="src ${has ? f.src : 'leer'}" id="src-${fd.k}">${SRC[has ? f.src : 'leer']}</span></label><textarea rows="2" data-k="${fd.k}" ${ro ? 'readonly' : ''} oninput="editField(this)">${esc(f.value)}</textarea>${isMiss ? `<div class="q">❓ ${esc(n.questions?.[fd.k] || fd.q || 'Bitte ergänzen.')}</div>` : ''}</div>`; }).join('')}
+    <h3>Belege / Anlagen</h3>
+    ${S.events.slice().sort(evSort).slice(0, 8).map(e => `<label class="ev"><input type="checkbox" ${n.evidence.includes(e.id) ? 'checked' : ''} ${ro ? 'disabled' : ''} onchange="toggleEv('${e.id}',this.checked)"><span>${fmt(e.date)}${e.time ? ' ' + e.time : ''} · ${esc(e.source)}: ${esc(trunc(e.text, 90))}</span></label>`).join('')}
+    <div class="thumbs">${n.photos.map((p, i) => `<div><img src="${p.data}" title="${esc(p.caption)}" alt="">${ro ? '' : `<button onclick="rmPhoto(${i})">✕</button>`}</div>`).join('')}</div>
+    ${ro ? '' : `<label class="btn sm" style="display:inline-block;margin-top:8px">📷 Foto anhängen<input type="file" accept="image/*" capture="environment" hidden onchange="addPhoto(this)"></label>`}
+    <h3>Prüfung</h3><div id="hints">${hintsHTML(n)}</div>
+    ${ro ? '' : `<div class="row"><button class="btn sm" id="chk" onclick="checkNotice()">${hasAI() ? 'KI-Prüfung starten' : 'Prüfung aktualisieren'}</button></div>`}
+    <div class="row" style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px">
+      ${n.status === 'entwurf' ? `<button class="btn ok" id="appr" ${miss.length ? 'disabled' : ''} onclick="approve()">✔ Freigeben</button>` : ''}
+      ${n.status === 'freigegeben' ? `<button class="btn pri" onclick="markSent()">Als versendet markieren</button>` : ''}
+      ${n.status !== 'entwurf' ? `<button class="btn" onclick="reopen()">Zurück in Entwurf</button>` : ''}
+      <button class="btn" onclick="exportNotice('pdf')">PDF</button><button class="btn" onclick="exportNotice('word')">Word</button>
+      ${n.status === 'entwurf' ? `<button class="btn" onclick="delNotice()" style="margin-left:auto">Löschen</button>` : ''}
+    </div>
+    ${n.status === 'entwurf' ? `<p class="muted" id="apprhint" style="${miss.length ? '' : 'display:none'}">Freigabe erst möglich, wenn alle Pflichtangaben ergänzt sind.</p>` : ''}
+    ${n.approvedAt ? `<p class="muted">Freigegeben durch ${esc(S.project.siteManager)} am ${fmtDT(n.approvedAt)}${n.sentAt ? ` · versendet am ${fmtDT(n.sentAt)}` : ''}</p>` : ''}
+    <p class="disc">⚖️ Entwurfshilfe – keine Rechtsberatung. Inhalt und Versand verantwortet die Bauleitung bzw. das Unternehmen.</p>
+  </div><div class="paper" id="preview">${letterHTML(n)}</div></div>`;
+}
+function editField(el) {
+  const n = curNotice(), k = el.dataset.k, v = el.value, has = !!v.trim();
+  n.fields[k] = { value: v, src: has ? 'manuell' : 'leer' }; save();
+  const b = $('#src-' + k); b.className = 'src ' + (has ? 'manuell' : 'leer'); b.textContent = SRC[has ? 'manuell' : 'leer'];
+  const fd = TYPES[n.type].fields.find(x => x.k === k), wrap = el.closest('.fld');
+  if (fd.req) { wrap.classList.toggle('miss', !has); const q = wrap.querySelector('.q'); if (q) q.style.display = has ? 'none' : ''; }
+  const miss = missing(n), a = $('#appr'), h = $('#apprhint'); if (a) a.disabled = !!miss.length; if (h) h.style.display = miss.length ? '' : 'none';
+  $('#preview').innerHTML = letterHTML(n); $('#hints').innerHTML = hintsHTML(n);
+}
+function toggleEv(id, on) { const n = curNotice(); n.evidence = n.evidence.filter(x => x !== id); if (on) n.evidence.push(id); save(); $('#preview').innerHTML = letterHTML(n); $('#hints').innerHTML = hintsHTML(n); }
+function addPhoto(input) {
+  const file = input.files[0]; if (!file) return; const rd = new FileReader();
+  rd.onload = () => { const img = new Image(); img.onload = () => {
+    const sc = Math.min(1, 900 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = img.width * sc; c.height = img.height * sc;
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); curNotice().photos.push({ data: c.toDataURL('image/jpeg', 0.75), caption: file.name.replace(/\.[^.]+$/, '') }); save(); renderEditor();
+  }; img.src = rd.result; }; rd.readAsDataURL(file);
+}
+function rmPhoto(i) { curNotice().photos.splice(i, 1); save(); renderEditor(); }
+function newBlank() { const n = createNotice({ type: $('#new-type').value, fields: {} }, ''); save(); openNotice(n.id); }
+function approve() {
+  const n = curNotice(); if (missing(n).length) return;
+  n.status = 'freigegeben'; n.approvedAt = new Date().toISOString();
+  n.evidence.forEach(id => { const e = evById(id); if (e && !e.noticeId) e.noticeId = n.id; });
+  save(); toast('Freigegeben. Jetzt als PDF oder Word exportieren.'); render();
+}
+function markSent() { const n = curNotice(); n.status = 'versendet'; n.sentAt = new Date().toISOString(); save(); render(); }
+function reopen() { const n = curNotice(); n.status = 'entwurf'; n.approvedAt = null; n.sentAt = null; save(); render(); }
+function delNotice() { const n = curNotice(); S.notices = S.notices.filter(x => x.id !== n.id); S.events.forEach(e => { if (e.noticeId === n.id) e.noticeId = null; }); curNoticeId = null; save(); render(); }
+function exportNotice(kind) { const n = curNotice(); exportDoc(kind, letterHTML(n), `${TYPES[n.type].title}_${fmt(iso(today()))}`); }
+async function checkNotice() {
+  const n = curNotice();
+  if (!hasAI()) { $('#hints').innerHTML = hintsHTML(n); toast('Regelprüfung aktualisiert. Für eine inhaltliche KI-Prüfung API-Key hinterlegen.'); return; }
+  setBusy('#chk', true, 'Prüfe…');
+  try {
+    const tmp = document.createElement('div'); tmp.innerHTML = letterHTML(n);
+    const r = parseJSON(await callLLM(SYS, `PROJEKTKONTEXT:\n${projectContext()}\n\nENTWURF (${TYPES[n.type].title}):\n${tmp.innerText}\n\nPrüfe den Entwurf wie ein erfahrener Oberbauleiter: Widersprüche, unklare oder angreifbare Formulierungen, fehlende Fakten (Zeit, Ort, Umfang, Belege), Abweichungen vom Projektkontext. Keine Rechtsberatung. Maximal 5 kurze, konkrete Hinweise.\nANTWORT: {"hints":[{"sev":"hoch|mittel|niedrig","t":"Hinweis"}]}`, 800));
+    n.aiHints = (r.hints || []).map(h => ({ sev: ['hoch', 'mittel', 'niedrig'].includes(h.sev) ? h.sev : 'niedrig', t: 'KI: ' + h.t })); save();
+  } catch (e) { toast('KI-Prüfung fehlgeschlagen: ' + e.message, 5000); }
+  setBusy('#chk', false); $('#hints').innerHTML = hintsHTML(n);
+}
+
+/* ---------- Bautagesbericht ---------- */
+function repActs(r) { const prev = iso(addDays(parseIso(r.date), -1)); return S.activities.filter(a => (r.date >= a.start && r.date <= a.end) || Number(r.performance?.[a.id]) || (r.date >= a.start && actualCum(a, prev) < a.qty)); }
+function reportHTML(r) {
+  const P = S.project, idx = S.reports.map(x => x.date).sort().indexOf(r.date) + 1;
+  const rows = repActs(r).map(a => {
+    const q = Number(r.performance?.[a.id]) || 0, soll = (r.date >= a.start && r.date <= a.end) ? plannedRate(a) : 0, pc = plannedCum(a, r.date), ac = actualCum(a, r.date), d = ac - pc;
+    return `<tr><td>${esc(a.name)}</td><td>${num(q)} ${a.unit}</td><td>${num(soll)} ${a.unit}</td><td>${num(ac)} / ${num(pc)} ${a.unit}</td><td class="${d < -0.5 ? 'neg' : ''}">${d >= 0 ? '+' : ''}${num(d)} ${a.unit}</td></tr>`;
+  }).join('');
+  const ev = S.events.filter(e => e.date === r.date).sort(evSortAsc);
+  const nts = S.notices.filter(n => n.evidence.some(id => ev.find(e => e.id === id)));
+  return `<div class="letter"><h1>Bautagesbericht Nr. ${idx}</h1>
+  <div class="l-bv"><b>Bauvorhaben:</b> ${esc(P.name)}, ${esc(P.address)}<br><b>Datum:</b> ${weekday(r.date)}, ${fmt(r.date)} · <b>Bauleitung:</b> ${esc(P.siteManager)}</div>
+  <table><tr><th>Wetter</th><td>${esc(r.weather || '–')}${r.temp !== '' && r.temp != null ? ', ' + esc(r.temp) + ' °C' : ''}</td><th>Personal</th><td>${esc(r.staff || '–')} Arbeitskräfte</td></tr><tr><th>Geräte</th><td colspan="3">${esc(r.equipment || '–')}</td></tr></table>
+  <h3>Leistungen</h3>${rows ? `<table><tr><th>Leistung</th><th>Heute</th><th>Soll / Tag</th><th>Kumuliert Ist / Soll</th><th>Abweichung</th></tr>${rows}</table>` : '<p>Keine Leistungen erfasst.</p>'}
+  <h3>Besondere Vorkommnisse</h3>${ev.length ? `<ul>${ev.map(e => `<li>${e.time ? esc(e.time) + ' Uhr – ' : ''}<b>${esc(EVT[e.type] || e.type)}:</b> ${esc(e.text)}</li>`).join('')}</ul>` : '<p>Keine.</p>'}
+  ${nts.length ? `<h3>Schriftverkehr</h3><ul>${nts.map(n => `<li>${esc(TYPES[n.type].title)} (${STATUS[n.status]})</li>`).join('')}</ul>` : ''}
+  ${r.notes ? `<h3>Bemerkungen</h3><p>${nl2br(r.notes)}</p>` : ''}
+  <p class="l-sign">_______________________________<br>${esc(P.siteManager)}, Bauleitung</p></div>`;
+}
+function renderReport(m) {
+  const t = iso(today()), dates = [...new Set([...S.reports.map(r => r.date), t])].sort().reverse();
+  if (!repDate || !dates.includes(repDate)) repDate = S.reports.find(r => r.date === t) ? t : lastReportDate();
+  const r = S.reports.find(x => x.date === repDate);
+  m.innerHTML = `<div class="row"><b>Tag:</b><select style="width:auto" onchange="repDate=this.value;render()">${dates.map(d => `<option value="${d}" ${d === repDate ? 'selected' : ''}>${fmt(d)}${d === t ? ' (heute)' : ''}${S.reports.find(x => x.date === d) ? '' : ' – noch kein Bericht'}</option>`).join('')}</select></div>
+  ${!r ? `<div class="card"><h2>Noch kein Bautagesbericht für ${fmt(repDate)}</h2><p class="muted">Beim Anlegen werden Bautagebuch-Einträge, Terminplan und Soll-Leistungen automatisch übernommen.</p><button class="btn pri" onclick="newReport()">Bericht anlegen</button></div>` : `
+  <div class="ed"><div>
+    <div class="card"><h2>Schnellerfassung</h2><p class="muted">Stichworte oder Diktat zum Tag – der Assistent befüllt den Bericht.</p>
+      <div class="row"><select id="rep-lang" style="width:auto">${LANGS}</select><button class="btn mic" id="rep-mic" onclick="toggleMic('rep-notes','rep-lang','rep-mic')">🎤 Diktieren</button></div>
+      <textarea id="rep-notes" rows="3" placeholder="z. B. 5 Mann, bewölkt 6 Grad, Aushub 70 m³, ab 13 Uhr Regen, Pumpe eingesetzt"></textarea>
+      <div class="row"><button class="btn pri" id="rep-fill" onclick="fillReport()">Bericht befüllen</button><span class="chip" onclick="$('#rep-notes').value='5 Mann, bewölkt 6 Grad, Aushub 85 m³, ab 13 Uhr Regen, Pumpe eingesetzt. Telekom-Freigabe weiterhin ausstehend.'">Beispiel</span></div></div>
+    <div class="card"><h2>Bautagesbericht ${fmt(r.date)}</h2>
+      <div class="grid g2" style="gap:0 12px">
+        <div><label>Wetter</label><input data-f="weather" value="${esc(r.weather)}" oninput="repField(this)"></div>
+        <div><label>Temperatur (°C)</label><input data-f="temp" value="${esc(r.temp)}" oninput="repField(this)"></div>
+        <div><label>Personal (Anzahl)</label><input data-f="staff" value="${esc(r.staff)}" oninput="repField(this)"></div>
+        <div><label>Geräte</label><input data-f="equipment" value="${esc(r.equipment)}" oninput="repField(this)"></div>
+      </div>
+      <h3>Leistungen</h3>${repActs(r).map(a => `<div class="row"><span style="flex:1">${esc(a.name)} <span class="muted">(Soll ${num(plannedRate(a))} ${a.unit}/Tag)</span></span><input style="width:110px" type="number" data-a="${a.id}" value="${r.performance?.[a.id] ?? ''}" oninput="repPerf(this)"><span>${a.unit}</span></div>`).join('') || '<p class="muted">Keine Leistungen an diesem Tag geplant.</p>'}
+      <label>Bemerkungen</label><textarea data-f="notes" rows="3" oninput="repField(this)">${esc(r.notes)}</textarea>
+      <h3>Bautagebuch-Einträge</h3>${eventsTable(S.events.filter(e => e.date === r.date).sort(evSortAsc))}
+      <div class="row"><input id="ev-time" style="width:90px" value="${nowTime()}"><select id="ev-type" style="width:auto">${Object.entries(EVT).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select><input id="ev-text" style="flex:1;min-width:180px" placeholder="Neuer Eintrag"><button class="btn sm" onclick="addEvent()">+ Eintrag</button></div>
+    </div></div>
+    <div><div class="row" style="margin-top:0"><button class="btn" onclick="exportReport('pdf')">PDF</button><button class="btn" onclick="exportReport('word')">Word</button></div><div class="paper" id="rep-preview">${reportHTML(r)}</div></div>
+  </div>`}`;
+}
+const curReport = () => S.reports.find(x => x.date === repDate);
+function newReport() {
+  const prev = S.reports.slice().sort((a, b) => a.date.localeCompare(b.date)).pop();
+  S.reports.push({ date: repDate, weather: '', temp: '', staff: '', equipment: prev ? prev.equipment : '', performance: {}, notes: '' });
+  S.reports.sort((a, b) => a.date.localeCompare(b.date)); save(); render();
+}
+function repField(el) { curReport()[el.dataset.f] = el.value; save(); $('#rep-preview').innerHTML = reportHTML(curReport()); }
+function repPerf(el) { const r = curReport(); r.performance = r.performance || {}; if (el.value === '') delete r.performance[el.dataset.a]; else r.performance[el.dataset.a] = Number(el.value); save(); $('#rep-preview').innerHTML = reportHTML(r); }
+function addEvent() { const txt = $('#ev-text').value.trim(); if (!txt) return; S.events.push({ id: uid('e'), date: repDate, time: $('#ev-time').value, type: $('#ev-type').value, source: 'Bautagebuch', text: txt, noticeId: null }); save(); render(); }
+function exportReport(kind) { const r = curReport(); exportDoc(kind, reportHTML(r), `Bautagesbericht_${fmt(r.date)}`); }
+function parseReportOffline(text, r) {
+  const t = text.toLowerCase(), out = { performance: {}, events: [] };
+  const st = t.match(/(\d+)\s*(mann|arbeiter|leute|personen|arbeitskräfte)/); if (st) out.staff = st[1];
+  const tp = t.match(/(-?\d+)\s*(°|grad)/); if (tp) out.temp = tp[1];
+  const w = t.match(/sonnig|heiter|bewölkt|bedeckt|regen|schnee|nebel|frost|gewitter/); if (w) out.weather = cap(w[0]);
+  repActs(r).forEach(a => { for (const k of a.keywords) { const mm = text.match(new RegExp(k + '[^0-9]{0,25}(\\d+(?:[.,]\\d+)?)\\s*(m³|m3|m²|m2|qm|kubik)', 'i')); if (mm) { out.performance[a.id] = parseFloat(mm[1].replace(',', '.')); break; } } });
+  text.split(/[.;\n]|,\s+(?=ab|um|seit)/).forEach(c => { const m = c.match(/(?:ab|um|seit)\s*(\d{1,2})(?::(\d{2}))?\s*uhr/i); if (m) out.events.push({ time: String(m[1]).padStart(2, '0') + ':' + (m[2] || '00'), type: /regen|schnee|sturm|gewitter|frost/i.test(c) ? 'wetter' : /steht|warten|fehlt|behindert|stillstand/i.test(c) ? 'behinderung' : 'info', text: cap(c.trim()) }); });
+  text.split(/[.;\n]/).map(s => s.trim()).filter(s => s && /ausstehend|fehlt|fehlen|steht|warten|behindert/i.test(s) && !/uhr/i.test(s)).forEach(s => out.events.push({ time: '', type: 'behinderung', text: cap(s) }));
+  return out;
+}
+async function fillReport() {
+  const text = $('#rep-notes').value.trim(), r = curReport(); if (!text) { toast('Bitte Stichworte eingeben oder diktieren.'); return; }
+  setBusy('#rep-fill', true, 'Befülle…'); let out;
+  if (hasAI()) {
+    try {
+      out = parseJSON(await callLLM(SYS, `PROJEKTKONTEXT:\n${projectContext()}\n\nAktive Leistungen (ID = Name, Einheit): ${repActs(r).map(a => `${a.id} = ${a.name} (${a.unit})`).join('; ')}\nStichworte des Bauleiters für den Bautagesbericht vom ${fmt(r.date)} (Sprache evtl. nicht Deutsch):\n"""${text}"""\n\nExtrahiere nur genannte Fakten, übersetze ins Deutsche. Ereignistypen: ${Object.keys(EVT).join(', ')}.\nANTWORT: {"weather":"","temp":"","staff":"","equipment":"","performance":{"ID":Zahl},"events":[{"time":"HH:MM oder leer","type":"typ","text":"sachlicher Satz"}],"notes":""}`, 1000));
+    } catch (e) { toast('KI nicht erreichbar – Offline-Analyse.', 4000); }
+  }
+  if (!out) out = parseReportOffline(text, r);
+  ['weather', 'temp', 'staff', 'equipment', 'notes'].forEach(k => { if (out[k] !== undefined && String(out[k]).trim()) r[k] = String(out[k]); });
+  r.performance = Object.assign(r.performance || {}, Object.fromEntries(Object.entries(out.performance || {}).filter(([k, v]) => S.activities.find(a => a.id === k) && !isNaN(Number(v))).map(([k, v]) => [k, Number(v)])));
+  (out.events || []).forEach(e => S.events.push({ id: uid('e'), date: r.date, time: e.time || '', type: EVT[e.type] ? e.type : 'info', source: 'Diktat', text: e.text, noticeId: null }));
+  save(); setBusy('#rep-fill', false); toast('Bericht befüllt – bitte prüfen.'); render();
+}
+
+/* ---------- Protokolle & E-Mails ---------- */
+function samples() {
+  const t0 = addDays(today(), -9), d = n => fmt(iso(addDays(t0, n)));
+  return {
+    protokoll: `Protokoll Baubesprechung Nr. 4 – BV Schillerstraße 12
+Datum: ${d(8)}
+Teilnehmer: Schmidt (Wohnbau Isar), Lehner (Architektin), Huber (Bauleitung), Kraus (Tragwerksplanung)
+1. Baugrube: Für die Telekom-Leitung in Achse C–D steht die Freigabe des Netzbetreibers weiterhin aus. Verantwortlich: Schmidt, Klärung bis ${d(10)}.
+2. Bewehrungspläne Bodenplatte Index B: Kraus sagt die Lieferung bis ${d(10)} zu. Beginn Bodenplatte laut Terminplan am ${d(11)}.
+3. Zusätzliche Baustraße zur Nachbarzufahrt: Herr Schmidt wünscht die Ausführung bis ${d(12)}. Angebot durch Huber bis ${d(9)}.
+4. Baustelleneinrichtung: Zweiter Container wird bis ${d(13)} gestellt. Verantwortlich: Huber.
+5. Nächste Baubesprechung: ${d(15)}, 10:00 Uhr, Baucontainer.`,
+    mail: `Von: k.kraus@tragwerk-kraus.de
+An: m.huber@huber-partner-bau.de
+Betreff: AW: Bewehrungspläne Bodenplatte Index B
+
+Hallo Herr Huber,
+leider verzögern sich die Bewehrungspläne Index B, da der Bauherr die Lastannahmen für die Tiefgarage nachträglich geändert hat.
+Neuer Termin für die Pläne: ${d(12)}.
+Bitte planen Sie entsprechend um.
+
+Viele Grüße
+K. Kraus`
+  };
+}
+function summarizeOffline(text) {
+  const lines = text.split(/\n+/).map(l => l.trim()).filter(Boolean);
+  const people = [...new Set((text.match(/Teilnehmer:([^\n]+)/i)?.[1] || '').split(',').map(s => s.trim().split(/\s|\(/)[0]).filter(Boolean))];
+  const items = [], risks = [];
+  lines.forEach(l => {
+    if (/^(von|an|betreff|datum|teilnehmer|protokoll|hallo|viele grüße|mit freundlichen)\b/i.test(l)) return;
+    const clean = l.replace(/^\d+\.\s*/, ''), due = l.match(/\b\d{1,2}\.\d{1,2}\.\d{4}\b/);
+    const owner = (l.match(/verantwortlich:\s*([A-ZÄÖÜ][\wäöüß-]+)/i) || [])[1] || people.find(p => new RegExp('\\b' + p + '\\b').test(l)) || '';
+    if (due && /bis|frist|termin|zusage|lieferung|klärung|angebot|spätestens/i.test(l) && !/nächste baubesprechung/i.test(l)) items.push({ item: trunc(clean, 160), owner, due: due[0] });
+    const rt = /verzög|fehlt|ausstehend|steht .*aus|stillstand|warten/i.test(l) ? 'behinderung' : /zusätzlich|wünscht|angeordnet|nachtrag|nachträglich geändert/i.test(l) ? 'mehrkosten' : /bedenken|ungeeignet|widersp/i.test(l) ? 'bedenken' : null;
+    if (rt) risks.push({ text: clean, notice: rt, why: rt === 'behinderung' ? 'Mögliche Behinderung – Anzeige prüfen' : rt === 'mehrkosten' ? 'Zusätzliche/geänderte Leistung – Mehrkosten vor Ausführung ankündigen' : 'Bedenken schriftlich anmelden' });
+  });
+  const head = lines[0] && /protokoll|betreff/i.test(text) ? (text.match(/Betreff:\s*([^\n]+)/i)?.[1] || lines[0]) : lines[0];
+  return { summary: `${trunc(head, 120)}: ${items.length} offene Punkte mit Frist, ${risks.length} mögliche Anzeigen-Fälle erkannt.`, openItems: items, decisions: [], risks };
+}
+function renderSummary(m) {
+  m.innerHTML = `<div class="ed"><div class="card"><h2>Protokolle & E-Mails zusammenfassen</h2>
+    <p class="muted">Text einfügen – der Assistent extrahiert offene Punkte, Verantwortliche, Fristen und Risiken und schlägt passende Schreiben vor.</p>
+    <div class="chips"><span class="chip" onclick="loadSample('protokoll')">📋 Beispiel: Baubesprechung</span><span class="chip" onclick="loadSample('mail')">✉️ Beispiel: E-Mail Tragwerksplaner</span></div>
+    <textarea id="sum-text" rows="15" oninput="sumText=this.value">${esc(sumText)}</textarea>
+    <div class="row"><button class="btn pri" id="sum-go" onclick="runSummary()">Zusammenfassen</button></div></div>
+    <div id="sum-out">${sumRes ? sumHTML(sumRes) : '<div class="card"><p class="muted">Noch keine Zusammenfassung.</p></div>'}</div></div>`;
+}
+function loadSample(k) { sumText = samples()[k]; $('#sum-text').value = sumText; }
+async function runSummary() {
+  const text = $('#sum-text').value.trim(); if (!text) { toast('Bitte Text einfügen.'); return; }
+  setBusy('#sum-go', true, 'Analysiere…'); let r = null;
+  if (hasAI()) {
+    try { r = parseJSON(await callLLM(SYS, `PROJEKTKONTEXT:\n${projectContext()}\n\nDOKUMENT (Protokoll oder E-Mail):\n"""${text}"""\n\nFasse zusammen und extrahiere: offene Punkte (wer, bis wann), Entscheidungen, sowie Risiken, die ein Schreiben erfordern könnten (Behinderung, Mehrkosten, Bedenken, Mangel). Nur Fakten aus dem Dokument. Datum als TT.MM.JJJJ.\nANTWORT: {"summary":"2–3 Sätze","openItems":[{"item":"","owner":"","due":""}],"decisions":[""],"risks":[{"text":"","notice":"behinderung|mehrkosten|bedenken|maengel|null","why":"kurze Begründung"}]}`, 1500)); }
+    catch (e) { toast('KI nicht erreichbar – Offline-Analyse.', 4000); }
+  }
+  sumRes = r || summarizeOffline(text); sumRes.source = /^von:/im.test(text) ? 'E-Mail' : 'Protokoll';
+  setBusy('#sum-go', false); $('#sum-out').innerHTML = sumHTML(sumRes);
+}
+function sumHTML(r) {
+  const t = iso(today());
+  const dueCls = d => { const x = parseDE(d); if (!x) return ''; const n = daysBetween(t, iso(x)); return n < 0 ? 'verzug' : n <= 2 ? 'beobachten' : 'implan'; };
+  return `<div class="card"><h2>Kurzfassung</h2><p>${esc(r.summary)}</p>
+    <h3>Offene Punkte</h3>${(r.openItems || []).length ? `<table class="t"><tr><th>Punkt</th><th>Wer</th><th>Frist</th></tr>${r.openItems.map(i => `<tr><td>${esc(i.item)}</td><td>${esc(i.owner || '–')}</td><td><span class="st ${dueCls(i.due)}">${esc(i.due || '–')}</span></td></tr>`).join('')}</table>
+      <div class="row"><button class="btn sm" onclick="sumToDiary()">Offene Punkte ins Bautagebuch</button></div>` : '<p class="muted">Keine offenen Punkte mit Frist erkannt.</p>'}
+    ${(r.decisions || []).filter(Boolean).length ? `<h3>Entscheidungen</h3><ul>${r.decisions.filter(Boolean).map(d => `<li>${esc(d)}</li>`).join('')}</ul>` : ''}
+    <h3>Risiken & vorgeschlagene Schreiben</h3>${(r.risks || []).length ? r.risks.map((x, i) => `<div class="alert ${x.notice ? 'mittel' : 'niedrig'}"><div class="x"><div class="t">${esc(x.why || 'Risiko')}</div><div class="d">${esc(x.text)}</div></div>${TYPES[x.notice] ? `<button class="btn sm" onclick="noticeFromRisk(${i})">${TYPES[x.notice].title} entwerfen</button>` : ''}</div>`).join('') : '<p class="muted">Keine Risiken erkannt.</p>'}
+  </div>`;
+}
+function sumToDiary() { (sumRes.openItems || []).forEach(i => S.events.push({ id: uid('e'), date: iso(today()), time: nowTime(), type: 'info', source: sumRes.source, text: `Offener Punkt: ${i.item}${i.owner ? ' – ' + i.owner : ''}${i.due ? ', bis ' + i.due : ''}`, noticeId: null })); save(); toast(`${(sumRes.openItems || []).length} Punkte ins Bautagebuch übernommen.`); render(); }
+async function noticeFromRisk(i) {
+  const x = sumRes.risks[i]; toast('Erstelle Entwurf…');
+  const ev = { id: uid('e'), date: iso(today()), time: nowTime(), type: x.notice === 'mehrkosten' ? 'anordnung' : x.notice === 'maengel' ? 'mangel' : x.notice, source: sumRes.source, text: x.text, noticeId: null };
+  S.events.push(ev);
+  const r = await extract(x.text, { forceType: x.notice });
+  const n = createNotice(r, x.text); n.evidence = [ev.id]; ev.noticeId = n.id; save(); openNotice(n.id);
+}
+
+/* ---------- Einstellungen ---------- */
+function renderSettings(m) {
+  const P = S.project;
+  m.innerHTML = `<div class="grid g2"><div class="card"><h2>KI-Anbindung</h2>
+    <p class="muted">Ohne Key läuft BauAssist im Demo-Modus (regelbasiert, deutsch). Mit Key: freie Formulierungen, Übersetzung, KI-Prüfung. Der Key wird nur lokal in diesem Browser gespeichert – nur für Prototyp/Demo geeignet.</p>
+    <label>Anbieter</label><select id="cfg-prov" onchange="CFG.provider=this.value;CFG.model=this.value==='openai'?'gpt-4.1-mini':'claude-sonnet-5-5';saveCfg();render()"><option value="anthropic" ${CFG.provider === 'anthropic' ? 'selected' : ''}>Anthropic (Claude)</option><option value="openai" ${CFG.provider === 'openai' ? 'selected' : ''}>OpenAI / kompatibel</option></select>
+    <label>API-Key</label><input id="cfg-key" type="password" value="${esc(CFG.apiKey)}" placeholder="sk-…" oninput="CFG.apiKey=this.value;saveCfg()">
+    <label>Modell</label><input id="cfg-model" value="${esc(CFG.model)}" oninput="CFG.model=this.value;saveCfg()">
+    ${CFG.provider === 'openai' ? `<label>Base-URL (optional)</label><input value="${esc(CFG.baseUrl)}" placeholder="https://api.openai.com/v1" oninput="CFG.baseUrl=this.value;saveCfg()">` : ''}
+    <div class="row"><button class="btn pri" id="cfg-test" onclick="testAI()">Verbindung testen</button><button class="btn" onclick="render()">Übernehmen</button></div>
+  </div>
+  <div class="card"><h2>Projekt</h2>
+    ${[['name', 'Bauvorhaben'], ['address', 'Adresse'], ['contractNo', 'Vertrags-Nr.'], ['siteManager', 'Bauleiter']].map(([k, l]) => `<label>${l}</label><input value="${esc(P[k])}" oninput="S.project.${k}=this.value;save()">`).join('')}
+    ${[['name', 'Auftraggeber'], ['contact', 'Ansprechpartner AG'], ['street', 'Straße AG'], ['city', 'PLZ / Ort AG']].map(([k, l]) => `<label>${l}</label><input value="${esc(P.client[k])}" oninput="S.project.client.${k}=this.value;save()">`).join('')}
+    <label>Auftragnehmer (wir)</label><input value="${esc(P.contractor.name)}" oninput="S.project.contractor.name=this.value;save()">
+  </div></div>
+  <div class="card"><h2>Demo-Daten</h2><p class="muted">Setzt die Beispielbaustelle zurück – mit Terminen relativ zu heute. Vor jeder Präsentation einmal ausführen.</p>
+    <div class="row"><button class="btn" onclick="resetDemo()">Demo zurücksetzen</button><button class="btn" onclick="exportJSON()">Daten als JSON exportieren</button></div></div>`;
+}
+async function testAI() {
+  if (!hasAI()) { toast('Bitte zuerst einen API-Key eingeben.'); return; }
+  setBusy('#cfg-test', true, 'Teste…');
+  try { const r = await callLLM('Antworte nur mit JSON.', 'Antworte mit {"ok":true}', 50); parseJSON(r); toast('✔ Verbindung funktioniert.'); }
+  catch (e) { toast('Fehler: ' + e.message, 6000); }
+  setBusy('#cfg-test', false); render();
+}
+function resetDemo() { S = makeSeed(); curNoticeId = null; capText = ''; sumText = ''; sumRes = null; repDate = null; save(); toast('Demo-Baustelle zurückgesetzt.'); go('overview'); }
+function exportJSON() { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' })); a.download = 'bauassist-daten.json'; a.click(); }
+
+/* ---------- Start ---------- */
+load(); render();
+</script>
+</body>
+</html>
